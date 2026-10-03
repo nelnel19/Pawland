@@ -15,9 +15,18 @@ const User = require("./models/User");
 
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:5173"
-}));
+// Allow both local development and deployed frontend
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://pawland-main.onrender.com",
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
@@ -35,22 +44,21 @@ app.use("/api/users", userRoutes);
 // Protected dashboard
 app.get("/api/dashboard", protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id)
-      .select("-password");
+    const user = await User.findById(req.user.id).select("-password");
 
     if (!user) {
       return res.status(404).json({
-        message: "User not found"
+        message: "User not found",
       });
     }
 
     res.json({
       message: "Welcome to your dashboard",
-      user
+      user,
     });
   } catch (error) {
     res.status(500).json({
-      message: "Server error"
+      message: "Server error",
     });
   }
 });
