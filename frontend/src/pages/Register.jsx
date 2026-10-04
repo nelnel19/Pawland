@@ -69,16 +69,31 @@ function Register() {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setError("");
+    setLoading(true);
 
     try {
       const response = await API.post("/auth/google", {
         credential: credentialResponse.credential,
       });
 
+      const role = response.data?.user?.role || "User";
+
       localStorage.setItem("token", response.data.token);
-      navigate("/dashboard");
+      localStorage.setItem("role", role);
+
+      if (role === "Admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Google registration failed.");
+      console.error("GOOGLE REGISTER ERROR:", err);
+      setError(
+        err.response?.data?.message ||
+          "Google registration failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -24,6 +24,7 @@ API.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
+      localStorage.removeItem("role");
 
       // Only redirect if not already on the login page
       if (window.location.pathname !== "/login") {

@@ -42,6 +42,20 @@ function Login() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Shared helper: store auth + redirect based on role
+  const completeLogin = (data) => {
+    const role = data?.user?.role || "User";
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", role);
+
+    if (role === "Admin") {
+      navigate("/admin/dashboard", { replace: true });
+    } else {
+      navigate("/dashboard", { replace: true });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -49,15 +63,7 @@ function Login() {
 
     try {
       const response = await API.post("/auth/login", form);
-
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.user.role);
-
-      if (response.data.user.role === "Admin") {
-        navigate("/admin/reports", { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
-      }
+      completeLogin(response.data);
     } catch (err) {
       setError(err.response?.data?.message || "Login failed.");
     } finally {
@@ -67,22 +73,22 @@ function Login() {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setError("");
+    setLoading(true);
 
     try {
       const response = await API.post("/auth/google", {
         credential: credentialResponse.credential,
       });
 
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.user.role);
-
-      if (response.data.user.role === "Admin") {
-        navigate("/admin/reports", { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
-      }
+      completeLogin(response.data);
     } catch (err) {
-      setError(err.response?.data?.message || "Google login failed.");
+      console.error("GOOGLE LOGIN ERROR:", err);
+      setError(
+        err.response?.data?.message ||
+          "Google login failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
